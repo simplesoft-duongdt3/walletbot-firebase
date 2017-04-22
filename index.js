@@ -38,32 +38,15 @@ bot.start();
 
 //---------------FUNCTIONS for bot----------------\\
 function onUserNeedHelp(payload, chat) {
-    chat.say('Input format:\n' +
-        'Eat something 1000 -> value: 1,000\n' +
-        'Buy something 2,000.05 -> value: 2,000.05\n' +
-        'Give someone 5k -> value: 5,000\n' +
-        'Buy something 1m -> value: 1,000,000\n' +
-        '\n' +
-        'Report formats: \n' +
-        'report -> report today\n' +
-        'report today -> today report\n' +
-        'report week -> report week\n' +
-        'report month -> report month\n' +
-        'report 7d -> report 7 day\n' +
-        'report yesterday -> yesterday report' +
-        'report 17/2 -> report 17/02/[current year]\n' +
-        'report 17/2/2017 -> report 17/02/2017\n' +
-        '\n' +
-        'Transactions list: \n' +
-        'transaction -> transactions today\n' +
-        'transactions yesterday -> transactions yesterday\n' +
-        'transactions week -> transactions week\n' +
-        'transactions month -> transactions month\n' +
-        'transactions 7d -> transactions 7 day\n' +
-        'transactions 17/2 -> transactions 17/02/[current year]\n' +
-        'transactions 17/2/2017 -> transactions 17/02/2017' +
-        '\n\n' + 'Good luck! Have a good time!'
-    );
+
+    chat.say({
+        text: 'FAQ',
+        buttons: [
+            {type: 'postback', title: 'Input format', payload: payloads.HELP_INPUT_FORMAT},
+            {type: 'postback', title: 'Report', payload: payloads.HELP_REPORT},
+            // { type: 'postback', title: 'Transaction', payload: payloads.HELP_TRANSACTION }
+        ]
+    });
 }
 
 function onUserHello(payload, chat) {
@@ -129,8 +112,43 @@ function onUserNeedPostbackSetting(payload, chat) {
 
 }
 
-function onUserNeedPostbackFAQ(payload, chat) {
+function onUserNeedHelpInputFormat(payload, chat) {
+    chat.say('Input format:\n' +
+        'Eat something 1000 -> value: 1,000\n' +
+        'Buy something 2,000.05 -> value: 2,000.05\n' +
+        'Give someone 5k -> value: 5,000\n' +
+        'Buy something 1m -> value: 1,000,000\n' +
+        '\n\n' + 'Good luck! Have a good time!'
+    );
+}
 
+function onUserNeedHelpReport(payload, chat) {
+    chat.say(
+        'Report: \n' +
+        'report -> report today\n' +
+        'report today -> today report\n' +
+        'report week -> report week\n' +
+        'report month -> report month\n' +
+        'report 7d -> report 7 day\n' +
+        'report yesterday -> yesterday report' +
+        'report 17/2 -> report 17/02/[current year]\n' +
+        'report 17/2/2017 -> report 17/02/2017\n' +
+        '\n\n' + 'Good luck! Have a good time!'
+    );
+}
+
+function onUserNeedHelpTransactions(payload, chat) {
+    chat.say(
+        'Transactions list: \n' +
+        'transaction -> transactions today\n' +
+        'transactions yesterday -> transactions yesterday\n' +
+        'transactions week -> transactions week\n' +
+        'transactions month -> transactions month\n' +
+        'transactions 7d -> transactions 7 day\n' +
+        'transactions 17/2 -> transactions 17/02/[current year]\n' +
+        'transactions 17/2/2017 -> transactions 17/02/2017' +
+        '\n\n' + 'Good luck! Have a good time!'
+    );
 }
 
 function onUserSendPostback(payload, chat) {
@@ -143,8 +161,12 @@ function onUserSendPostback(payload, chat) {
         onUserNeedPostbackHelp(payload, chat);
     } else if (payloads.SETTING === text) {
         onUserNeedPostbackSetting(payload, chat);
-    } else if (payloads.FAQ === text) {
-        onUserNeedPostbackFAQ(payload, chat);
+    } else if (payloads.HELP_INPUT_FORMAT === text) {
+        onUserNeedHelpInputFormat(payload, chat);
+    } else if (payloads.HELP_REPORT === text) {
+        onUserNeedHelpReport(payload, chat);
+    } else if (payloads.HELP_TRANSACTION === text) {
+        onUserNeedHelpTransactions(payload, chat);
     }
 }
 

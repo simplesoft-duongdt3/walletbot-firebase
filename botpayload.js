@@ -5,5 +5,8 @@ module.exports = Object.freeze({
     GET_STARTED : 'GET_STARTED',
     SETTING : 'SETTING',
     HELP : 'HELP',
-    FAQ : 'FAQ'
+    HELP_INPUT_FORMAT : 'HELP_INPUT_FORMAT',
+    HELP_REPORT : 'HELP_REPORT',
+    HELP_TRANSACTION : 'HELP_TRANSACTION',
+
 });
