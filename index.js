@@ -81,12 +81,11 @@ function onUserHello(payload, chat) {
     });
 }
 
-function createRecord(recordsRef, record, userId) {
+function createRecord(recordsRef, record) {
     let newRecord = recordsRef.push();
     newRecord.set({
         name: record.name,
-        value: record.value,
-        userId: userId
+        value: record.value
     }, error => {
         if (error) {
             console.log("Data record could not be saved." + error);
@@ -104,15 +103,19 @@ function onUserSendMessage(payload, chat) {
     } else if (checkKeyword(text, ['hi', 'hello'])) {
         onUserHello(payload, chat);
     } else {
-        let record = getRecordFromText(text, userId);
+        let record = getRecordFromText(text);
         if (record) {
             let recordsRef = firebaseDb.ref("records_" + userId);
             createRecord(recordsRef, record, userId);
+            chat.say("Created a new record: " + record.name + " value: " + record.value);
+        } else {
+            console.log("The user said: " + text);
+            chat.say("You said: " + text);
         }
+
     }
 
-    console.log("The user said: ${text}");
-    chat.say("Echo: ${text}");
+
 }
 
 bot.on('message', onUserSendMessage);
@@ -143,7 +146,7 @@ function getAmountInTextM(text) {
     return getAmountInTextWithRegex(text, regex) * 1000000;
 }
 
-function getRecordFromText(text, userId) {
+function getRecordFromText(text) {
     let amount = 0;
     let name = "";
     if (text) {
