@@ -23,7 +23,7 @@ module.exports = {
         return countTrue > 0;
     },
 
-    getAmountInTextWithRegex: function (text, regexPattern) {
+    getAmountInTextWithRegex(text, regexPattern) {
         let amount = 0;
         let result = text.trim().match(regexPattern);
         if (result) {
@@ -33,17 +33,17 @@ module.exports = {
         return amount;
     },
 
-    getAmountInTextSimple: function (text) {
+    getAmountInTextSimple (text) {
         let regex = /(\s)(\d+(\,*))*(\d+(\.*))\d*$/igm;
         return getAmountInTextWithRegex(text, regex);
     },
 
-    getAmountInTextK: function (text) {
+    getAmountInTextK (text) {
         let regex = /(\s)(\d+(\,*))*(\d+(\.*))\d*K{1}$/igm;
         return getAmountInTextWithRegex(text, regex) * 1000;
     },
 
-    getAmountInTextM: function (text) {
+    getAmountInTextM (text) {
         let regex = /(\s)(\d+(\,*))*(\d+(\.*))\d*M{1}$/igm;
         return getAmountInTextWithRegex(text, regex) * 1000000;
     },
