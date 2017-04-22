@@ -136,6 +136,7 @@ function onUserNeedPostbackFAQ(payload, chat) {
 }
 
 function onUserSendPostback(payload, chat) {
+    console.log(payload);
     const text = payload.message.text;
     const userId = payload.sender.id;
     if (payloads.GET_STARTED === text) {
