@@ -38,8 +38,7 @@ bot.start();
 
 //---------------FUNCTIONS for bot----------------\\
 function onUserNeedHelp(payload, chat) {
-    chat.say({
-        text: 'Input format:\n' +
+    chat.say('Input format:\n' +
         'Eat something 1000 -> value: 1,000\n' +
         'Buy something 2,000.05 -> value: 2,000.05\n' +
         'Give someone 5k -> value: 5,000\n' +
@@ -64,8 +63,7 @@ function onUserNeedHelp(payload, chat) {
         'transactions 17/2 -> transactions 17/02/[current year]\n' +
         'transactions 17/2/2017 -> transactions 17/02/2017' +
         '\n\n' + 'Good luck! Have a good time!'
-        ,
-    });
+    );
 }
 
 function onUserHello(payload, chat) {
@@ -136,7 +134,7 @@ function onUserNeedPostbackFAQ(payload, chat) {
 }
 
 function onUserSendPostback(payload, chat) {
-    console.log(payload);
+    //console.log(payload);
     const text = payload.postback.payload;
     const userId = payload.sender.id;
     if (payloads.GET_STARTED === text) {
