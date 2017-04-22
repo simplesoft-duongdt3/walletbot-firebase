@@ -17,7 +17,6 @@ adminFirebase.initializeApp({
 
 const firebaseDb = adminFirebase.database();
 
-
 const bot = new BootBot({
     accessToken: configAuth.accessToken,
     verifyToken: configAuth.verifyToken,
@@ -38,7 +37,6 @@ bot.start();
 
 //---------------FUNCTIONS for bot----------------\\
 function onUserNeedHelp(payload, chat) {
-
     chat.say({
         text: 'FAQ',
         buttons: [
@@ -89,19 +87,34 @@ function onUserSendMessage(payload, chat) {
         let fromTime = moment().add(7, 'h').format("DD/MM/YYYY");
         report(payload, chat, fromTime, fromTime);
     } else {
-        let record = tools.getRecordFromText(text);
-        if (record) {
-            let recordsRef = firebaseDb.ref("transactions_" + userId);
-            createTransaction(recordsRef, record, userId);
-            chat.say("Created a new record: " + record.name + " value: " + record.value);
-        } else {
-            chat.say("You said: " + text);
+        let arrayOfLines = text.match(/[^\r\n]+/g);
+        let textCreateRecord = "";
+        let textUserSaid = "";
+
+        if (arrayOfLines) {
+            arrayOfLines.forEach(line => {
+                let record = tools.getRecordFromText(line);
+                if (record) {
+                    let recordsRef = firebaseDb.ref("transactions_" + userId);
+                    createTransaction(recordsRef, record, userId);
+                    textCreateRecord += "Created a new record: " + record.name + " value: " + record.value + "\n";
+                } else {
+                    textUserSaid += "You said: " + text;
+                }
+            });
+
+            chat.say(textCreateRecord + textUserSaid);
+
         }
+
+
+
     }
 }
 
 function onUserNeedPostbackGetStarted(payload, chat) {
-
+    chat.say("I'm Tiny Wallet Bot. Nice to meet you!\nI have some tutorial for you, let enjoy it!");
+    onUserNeedHelp(payload, chat)
 }
 
 function onUserNeedPostbackHelp(payload, chat) {
@@ -118,7 +131,7 @@ function onUserNeedHelpInputFormat(payload, chat) {
         'Buy something 2,000.05 -> value: 2,000.05\n' +
         'Give someone 5k -> value: 5,000\n' +
         'Buy something 1m -> value: 1,000,000\n' +
-        '\n\n' + 'Good luck! Have a good time!'
+        '\n' + 'Good luck! Have a good time!'
     );
 }
 
@@ -133,7 +146,7 @@ function onUserNeedHelpReport(payload, chat) {
         'report yesterday -> yesterday report' +
         'report 17/2 -> report 17/02/[current year]\n' +
         'report 17/2/2017 -> report 17/02/2017\n' +
-        '\n\n' + 'Good luck! Have a good time!'
+        '\n' + 'Good luck! Have a good time!'
     );
 }
 
@@ -207,9 +220,9 @@ function report(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
             "\n" +
             "   Avg: " + numeral(avg).format('0,0.[00]') + "/day" +
             "\n" +
-            "   Min: " + numeral(min).format('0,0.[00]') + "/day" +
+            "   Min: " + numeral(min).format('0,0.[00]') + "/transaction" +
             "\n" +
-            "   Max: " + numeral(max).format('0,0.[00]') + "/day";
+            "   Max: " + numeral(max).format('0,0.[00]') + "/transaction";
 
         chat.say(reportText);
     };
