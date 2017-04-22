@@ -13,8 +13,6 @@ adminFirebase.initializeApp({
 
 let firebaseDb = adminFirebase.database();
 
-let userRef = firebaseDb.ref("user");
-
 //insert
 /*// Generate a reference to a new location and add some data using push()
 var newUser = userRef.push();
@@ -83,6 +81,21 @@ function onUserHello(payload, chat) {
     });
 }
 
+function createRecord(recordsRef, record, userId) {
+    let newRecord = recordsRef.push();
+    newRecord.set({
+        name: record.name,
+        value: record.value,
+        userId: userId
+    }, error => {
+        if (error) {
+            console.log("Data record could not be saved." + error);
+        } else {
+            console.log("Data record saved successfully.");
+        }
+    });
+}
+
 function onUserSendMessage(payload, chat) {
     const text = payload.message.text;
     const userId = payload.sender.id;
@@ -90,7 +103,13 @@ function onUserSendMessage(payload, chat) {
         onUserNeedHelp(payload, chat);
     } else if (checkKeyword(text, ['hi', 'hello'])) {
         onUserHello(payload, chat);
-    } else
+    } else {
+        let record = getRecordFromText(text, userId);
+        if (record) {
+            let recordsRef = firebaseDb.ref("records_" + userId);
+            createRecord(recordsRef, record, userId);
+        }
+    }
 
     console.log("The user said: ${text}");
     chat.say("Echo: ${text}");
@@ -99,3 +118,52 @@ function onUserSendMessage(payload, chat) {
 bot.on('message', onUserSendMessage);
 bot.start();
 
+function getAmountInTextWithRegex(text, regexPattern) {
+    let amount = 0;
+    let result = text.trim().match(regexPattern);
+    if (result) {
+        let str = result[0].replace(new RegExp(',', 'gi'), '').trim();
+        amount = parseFloat(str);
+    }
+    return amount;
+}
+
+function getAmountInTextSimple(text) {
+    let regex = /(\s)(\d+(\,*))*(\d+(\.*))\d*$/igm;
+    return getAmountInTextWithRegex(text, regex);
+}
+
+function getAmountInTextK(text) {
+    let regex = /(\s)(\d+(\,*))*(\d+(\.*))\d*K{1}$/igm;
+    return getAmountInTextWithRegex(text, regex) * 1000;
+}
+
+function getAmountInTextM(text) {
+    let regex = /(\s)(\d+(\,*))*(\d+(\.*))\d*M{1}$/igm;
+    return getAmountInTextWithRegex(text, regex) * 1000000;
+}
+
+function getRecordFromText(text, userId) {
+    let amount = 0;
+    let name = "";
+    if (text) {
+        amount = getAmountInTextM(text);
+        if (amount === 0) {
+            amount = getAmountInTextK(text);
+        }
+        if (amount === 0) {
+            amount = getAmountInTextSimple(text);
+        }
+
+        if (amount > 0) {
+            name = text.substring(0, text.lastIndexOf(" "));
+        }
+    }
+    return amount > 0 ? { name : name, value: amount } : null;
+}
+
+/*console.log(getAmountInText("An sang 90k"))
+console.log(getAmountInText("An sang 90,000"))
+console.log(getAmountInText("An sang 90.09"))
+console.log(getAmountInText("An sang 90,000k"))
+console.log(getAmountInText("An sang 9m"))*/
