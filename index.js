@@ -179,7 +179,7 @@ function report(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
     let dateTimeFrom = momentFrom.valueOf();
     let momentTo = moment(toTimeDDMMYY, "DD/MM/YYYY").add(1, 'd').subtract(1, 's').subtract(7, 'h');
     let dateTimeTo = momentTo.valueOf();
-    let diffDay = momentTo.diff(momentFrom, 'd');
+    let diffDay = momentTo.diff(momentFrom, 'd') + 1;
 
     let successCallback = function (snapshot) {
         let sum = 0.0;
