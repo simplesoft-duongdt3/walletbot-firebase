@@ -1,6 +1,32 @@
 /**
  * Created by admin on 4/22/17.
  */
+
+function getAmountInTextWithRegex(text, regexPattern) {
+    let amount = 0;
+    let result = text.trim().match(regexPattern);
+    if (result) {
+        let str = result[0].replace(new RegExp(',', 'gi'), '').trim();
+        amount = parseFloat(str);
+    }
+    return amount;
+}
+
+function getAmountInTextSimple (text) {
+    let regex = /(\s)(\d+(\,*))*(\d+(\.*))\d*$/igm;
+    return getAmountInTextWithRegex(text, regex);
+}
+
+function getAmountInTextK (text) {
+    let regex = /(\s)(\d+(\,*))*(\d+(\.*))\d*K{1}$/igm;
+    return getAmountInTextWithRegex(text, regex) * 1000;
+}
+
+function getAmountInTextM (text) {
+    let regex = /(\s)(\d+(\,*))*(\d+(\.*))\d*M{1}$/igm;
+    return getAmountInTextWithRegex(text, regex) * 1000000;
+}
+
 module.exports = {
     checkKeyword: function (text, keywordArray) {
         if (!text || !keywordArray) {
@@ -21,31 +47,6 @@ module.exports = {
         });
 
         return countTrue > 0;
-    },
-
-    getAmountInTextWithRegex(text, regexPattern) {
-        let amount = 0;
-        let result = text.trim().match(regexPattern);
-        if (result) {
-            let str = result[0].replace(new RegExp(',', 'gi'), '').trim();
-            amount = parseFloat(str);
-        }
-        return amount;
-    },
-
-    getAmountInTextSimple (text) {
-        let regex = /(\s)(\d+(\,*))*(\d+(\.*))\d*$/igm;
-        return getAmountInTextWithRegex(text, regex);
-    },
-
-    getAmountInTextK (text) {
-        let regex = /(\s)(\d+(\,*))*(\d+(\.*))\d*K{1}$/igm;
-        return getAmountInTextWithRegex(text, regex) * 1000;
-    },
-
-    getAmountInTextM (text) {
-        let regex = /(\s)(\d+(\,*))*(\d+(\.*))\d*M{1}$/igm;
-        return getAmountInTextWithRegex(text, regex) * 1000000;
     },
 
     getRecordFromText: function (text) {
