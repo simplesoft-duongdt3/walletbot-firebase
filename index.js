@@ -52,13 +52,13 @@ function onUserNeedHelp(payload, chat) {
     ]);
 
     /*chat.say({
-        text: 'FAQ',
-        buttons: [
-            {type: 'postback', title: 'Input format', payload: payloads.HELP_INPUT_FORMAT},
-            {type: 'postback', title: 'Report', payload: payloads.HELP_REPORT},
-            // { type: 'postback', title: 'Transaction', payload: payloads.HELP_TRANSACTION }
-        ]
-    });*/
+     text: 'FAQ',
+     buttons: [
+     {type: 'postback', title: 'Input format', payload: payloads.HELP_INPUT_FORMAT},
+     {type: 'postback', title: 'Report', payload: payloads.HELP_REPORT},
+     // { type: 'postback', title: 'Transaction', payload: payloads.HELP_TRANSACTION }
+     ]
+     });*/
 }
 
 function onUserHello(payload, chat) {
@@ -100,7 +100,7 @@ function onUserSendMessage(payload, chat) {
     } else if (tools.checkKeyword(text, ["report"])) {
         let fromTime = formatTool.now().add(7, 'h').format("DD/MM/YYYY");
         report(payload, chat, fromTime, fromTime);
-    }  else if (tools.checkKeyword(text, ["history"])) {
+    } else if (tools.checkKeyword(text, ["history"])) {
         let fromTime = formatTool.now().add(7, 'h').format("DD/MM/YYYY");
         history(payload, chat, fromTime, fromTime);
     } else {
@@ -145,6 +145,10 @@ function onUserNeedPostbackSetting(payload, chat) {
 
 }
 
+function onUserDeleteTransaction(postBackId, chat) {
+
+}
+
 function onUserSendPostback(payload, chat) {
     const text = payload.postback.payload;
     const userId = payload.sender.id;
@@ -154,6 +158,8 @@ function onUserSendPostback(payload, chat) {
         onUserNeedPostbackHelp(payload, chat);
     } else if (payloads.SETTING === text) {
         onUserNeedPostbackSetting(payload, chat);
+    } else if (text.startsWith(payloads.DELETE_TRANSACTION)) {
+        onUserDeleteTransaction(text, chat);
     }
 }
 
@@ -236,7 +242,12 @@ function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
             let millisecondCreated = formatTool.parseDateFromMillisecond(item.timeCreated).add(7, 'h').valueOf();
             itemArray.push({
                 title: formatTool.formatNumber(item.value),
-                subtitle: item.name + "\n" + formatTool.formatDateTimeDefault(millisecondCreated)
+                subtitle: item.name + "\n" + formatTool.formatDateTimeDefault(millisecondCreated),
+                buttons: [{
+                    type: "postback",
+                    title: "Delete",
+                    payload: payloads.DELETE_TRANSACTION + item.uid
+                }]
             });
         });
         sendArrayItemToChat(itemArray, chat);
