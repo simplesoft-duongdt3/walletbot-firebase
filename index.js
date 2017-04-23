@@ -236,7 +236,7 @@ function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
             let millisecondCreated = formatTool.parseDateFromMillisecond(item.timeCreated).add(7, 'h').valueOf();
             itemArray.push({
                 title: formatTool.formatNumber(item.value),
-                subtitle: item.name + "\n" + formatTool.formatDateTime(millisecondCreated)
+                subtitle: item.name + "\n" + formatTool.formatDateTimeDefault(millisecondCreated)
             });
         });
         sendArrayItemToChat(itemArray, chat);
