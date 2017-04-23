@@ -233,7 +233,7 @@ function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
         let itemArray = [];
         snapshot.forEach(function (childSnapshot) {
             let item = childSnapshot.val();
-            let millisecondCreated = formatTool.parseDate(item.timeCreated).add(7, 'h').valueOf();
+            let millisecondCreated = formatTool.parseDateFromMillisecond(item.timeCreated).add(7, 'h').valueOf();
             itemArray.push({
                 title: formatTool.formatNumber(item.value),
                 subtitle: item.name + "\n" + formatTool.formatDateTime(millisecondCreated)
