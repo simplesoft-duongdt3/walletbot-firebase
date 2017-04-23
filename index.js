@@ -37,28 +37,6 @@ bot.start();
 
 //---------------FUNCTIONS for bot----------------\\
 
-function onUserNeedHelpInputFormat(payload, chat) {
-    chat.say('\n' +
-
-        '\n' + 'Good luck! Have a good time!'
-    );
-}
-
-function onUserNeedHelpReport(payload, chat) {
-    chat.say(
-        ': \n' +
-         +
-        '\n' + 'Good luck! Have a good time!'
-    );
-}
-
-function onUserNeedHelpTransactions(payload, chat) {
-    chat.say(
-         +
-        '\n\n' + 'Good luck! Have a good time!'
-    );
-}
-
 function onUserNeedHelp(payload, chat) {
     let titleHelpInput = "Input";
     let subTitleHelpInput = 'Examples:\nbuy st 2,000.05, buy st 5k, buy st 1m';
@@ -159,7 +137,6 @@ function onUserNeedPostbackSetting(payload, chat) {
 }
 
 function onUserSendPostback(payload, chat) {
-    console.log(payload);
     const text = payload.postback.payload;
     const userId = payload.sender.id;
     if (payloads.GET_STARTED === text) {
