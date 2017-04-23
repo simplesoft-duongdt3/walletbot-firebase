@@ -209,7 +209,7 @@ function report(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
 function sendArrayItemToChat(itemArray, chat) {
     if (itemArray.length > 0) {
         for (let i = 0; i < itemArray.length; i += 4) {
-            let endIndex = Math.min(i + 5, itemArray.length);
+            let endIndex = Math.min(i + 4, itemArray.length);
             let subArray = itemArray.slice(i, endIndex);
             if (subArray.length === 1) {
                 chat.sendGenericTemplate(subArray);
