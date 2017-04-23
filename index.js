@@ -100,6 +100,9 @@ function onUserSendMessage(payload, chat) {
     } else if (tools.checkKeyword(text, ["report"])) {
         let fromTime = formatTool.now().add(7, 'h').format("DD/MM/YYYY");
         report(payload, chat, fromTime, fromTime);
+    }  else if (tools.checkKeyword(text, ["history"])) {
+        let fromTime = formatTool.now().add(7, 'h').format("DD/MM/YYYY");
+        history(payload, chat, fromTime, fromTime);
     } else {
         let arrayOfLines = text.match(/[^\r\n]+/g);
         let textUserSaid = "";
@@ -201,5 +204,25 @@ function report(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
 }
 
 function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
+    const text = payload.message.text;
+    const userId = payload.sender.id;
+    let recordsRef = firebaseDb.ref("transactions_" + userId);
 
+    let momentFrom = formatTool.parseDate(fromTimeDDMMYY).subtract(7, 'h');
+    let dateTimeFrom = momentFrom.valueOf();
+    let momentTo = formatTool.parseDate(toTimeDDMMYY).add(1, 'd').subtract(1, 's').subtract(7, 'h');
+    let dateTimeTo = momentTo.valueOf();
+
+    let successCallback = function (snapshot) {
+        snapshot.reverse().forEach(function (childSnapshot) {
+            let item = childSnapshot.val();
+            chat.sendGenericTemplate([{title: formatTool.formatNumber(item.value), subtitle: item.name + "\n" + item.timeCreated}]);
+        });
+    };
+
+    recordsRef
+        .orderByChild('timeCreated')
+        .startAt(dateTimeFrom)
+        .endAt(dateTimeTo)
+        .once('value', successCallback);
 }
