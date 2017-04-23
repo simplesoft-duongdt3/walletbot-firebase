@@ -25,10 +25,10 @@ const bot = new BootBot({
 
 bot.setGetStartedButton(payloads.GET_STARTED);
 bot.setGreetingText("I'm Tiny Wallet Bot. Nice to meet you!");
-bot.setPersistentMenu([
+/*bot.setPersistentMenu([
     // {title: "Settings", type: "postback", payload: payloads.SETTING},
     {title: "Help", type: "postback", payload: payloads.HELP}
-], false);
+], false);*/
 
 bot.on('message', onUserSendMessage);
 bot.on('postback', onUserSendPostback);
@@ -88,22 +88,28 @@ function onUserSendMessage(payload, chat) {
         report(payload, chat, fromTime, fromTime);
     } else {
         let arrayOfLines = text.match(/[^\r\n]+/g);
-        let textCreateRecord = "";
         let textUserSaid = "";
-
+        let arrayElements = [];
         if (arrayOfLines) {
             arrayOfLines.forEach(line => {
                 let record = tools.getRecordFromText(line);
                 if (record) {
                     let recordsRef = firebaseDb.ref("transactions_" + userId);
                     createTransaction(recordsRef, record, userId);
-                    textCreateRecord += "Created a new record: " + record.name + " : " + record.value + "\n";
+                    arrayElements.add({title : record.name, subtitle: numeral(record.value).format('0,0.[00]')});
+                    //textCreateRecord += "Created a new record: " + record.name + " : " +  + "\n";
                 } else {
-                    textUserSaid += "You said: " + line;
+                    textUserSaid +=  line + "\n";
                 }
             });
 
-            chat.say(textCreateRecord + textUserSaid);
+            if (arrayElements.length > 0) {
+                chat.sendGenericTemplate(arrayElements);
+            }
+
+            if (textUserSaid.length > 0) {
+                chat.say("You said: \n" + textUserSaid);
+            }
         }
     }
 }
