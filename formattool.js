@@ -11,9 +11,8 @@ module.exports = {
     formatNumber : function (number) {
         return numeral(number).format('0,0.[00]');
     },
-
     formatDateTime : function (millisecond) {
-        return moment(millisecond).format("DD/MM/YYYY hh:ss");
+        return moment(millisecond).format("DD/MM/YYYY HH:mm");
     },
     formatDateTime : function (millisecond, format) {
         return moment(millisecond).format(format);
