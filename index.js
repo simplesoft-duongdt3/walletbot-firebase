@@ -107,6 +107,8 @@ function onUserSendMessage(payload, chat) {
         let arrayOfLines = text.match(/[^\r\n]+/g);
         let textUserSaid = "";
         if (arrayOfLines) {
+
+            let arrayItem = [];
             arrayOfLines.forEach(line => {
                 let record = tools.getRecordFromText(line);
                 if (record) {
@@ -115,13 +117,16 @@ function onUserSendMessage(payload, chat) {
                     let nameRecord = record.name;
                     let valueRecord = formatTool.formatNumber(record.value);
                     let sendValue = {title: valueRecord, subtitle: nameRecord};
-                    chat.sendGenericTemplate([sendValue]);
+                    arrayItem.push(sendValue);
                     //textCreateRecord += "Created a new record: " + record.name + " : " +  + "\n";
                 } else {
                     textUserSaid += line + "\n";
                 }
             });
 
+            if (arrayItem.length > 0) {
+                chat.sendListTemplate(arrayItem);
+            }
             if (textUserSaid.length > 0) {
                 chat.say("You said: \n" + textUserSaid);
             }
@@ -217,16 +222,14 @@ function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
         let itemArray = [];
         snapshot.forEach(function (childSnapshot) {
             let item = childSnapshot.val();
-            itemArray.push(item);
-        });
-
-        itemArray.reverse().forEach(item => {
-            let millisecondCreated = formatTool.parseDate(item.timeCreated).add(7, 'h').valueOf();
-            chat.sendGenericTemplate([{
+            itemArray.push({
                 title: formatTool.formatNumber(item.value),
                 subtitle: item.name + "\n" + formatTool.formatDateTime(millisecondCreated)
-            }]);
+            });
         });
+        if (itemArray.length > 0) {
+            chat.sendListTemplate(itemArray);
+        }
     };
 
     recordsRef
