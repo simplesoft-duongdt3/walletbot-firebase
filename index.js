@@ -96,7 +96,7 @@ function onUserSendMessage(payload, chat) {
                 if (record) {
                     let recordsRef = firebaseDb.ref("transactions_" + userId);
                     createTransaction(recordsRef, record, userId);
-                    arrayElements.add({title : record.name, subtitle: numeral(record.value).format('0,0.[00]')});
+                    arrayElements.add({title : numeral(record.value).format('0,0.[00]'), subtitle: record.name});
                     //textCreateRecord += "Created a new record: " + record.name + " : " +  + "\n";
                 } else {
                     textUserSaid +=  line + "\n";
