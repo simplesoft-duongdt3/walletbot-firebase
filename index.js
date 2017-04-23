@@ -124,9 +124,7 @@ function onUserSendMessage(payload, chat) {
                 }
             });
 
-            if (arrayItem.length > 0) {
-                chat.sendListTemplate(arrayItem);
-            }
+            sendArrayItemToChat(arrayItem, chat);
             if (textUserSaid.length > 0) {
                 chat.say("You said: \n" + textUserSaid);
             }
@@ -208,6 +206,19 @@ function report(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
         .once('value', successCallback);
 }
 
+function sendArrayItemToChat(itemArray, chat) {
+    if (itemArray.length > 0) {
+        for (let i = 0; i < itemArray.length; i += 4) {
+            let endIndex = Math.min(i + 5, itemArray.length);
+            let subArray = itemArray.slice(i, endIndex);
+            if (subArray.length === 1) {
+                chat.sendGenericTemplate(subArray);
+            } else {
+                chat.sendListTemplate(subArray);
+            }
+        }
+    }
+}
 function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
     const text = payload.message.text;
     const userId = payload.sender.id;
@@ -228,9 +239,7 @@ function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
                 subtitle: item.name + "\n" + formatTool.formatDateTime(millisecondCreated)
             });
         });
-        if (itemArray.length > 0) {
-            chat.sendListTemplate(itemArray);
-        }
+        sendArrayItemToChat(itemArray, chat);
     };
 
     recordsRef
