@@ -28,6 +28,12 @@ module.exports = {
     },
     parseTime : function (millisecond) {
         return moment(millisecond, "hh/mm/ss");
+    },
+    nowMillisecond : function () {
+        return moment().valueOf();
+    },
+    now : function () {
+        return moment();
     }
 };
 /*console.log(getAmountInText("An sang 90k"))

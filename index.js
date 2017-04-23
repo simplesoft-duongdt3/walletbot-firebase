@@ -75,7 +75,7 @@ function onUserHello(payload, chat) {
 
 function createTransaction(recordsRef, record) {
     let newRecord = recordsRef.push();
-    let timeNow = moment().valueOf();
+    let timeNow = formatTool.nowMillisecond();
     newRecord.set({
         name: record.name,
         value: record.value,
@@ -98,7 +98,7 @@ function onUserSendMessage(payload, chat) {
     } else if (tools.checkKeyword(text, ['hi', 'hello'])) {
         onUserHello(payload, chat);
     } else if (tools.checkKeyword(text, ["report"])) {
-        let fromTime = moment().add(7, 'h').format("DD/MM/YYYY");
+        let fromTime = formatTool.now().add(7, 'h').format("DD/MM/YYYY");
         report(payload, chat, fromTime, fromTime);
     } else {
         let arrayOfLines = text.match(/[^\r\n]+/g);
