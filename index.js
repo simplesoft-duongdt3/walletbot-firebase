@@ -110,9 +110,13 @@ function onUserSendMessage(payload, chat) {
                     let recordsRef = firebaseDb.ref("transactions_" + userId);
                     createTransaction(recordsRef, record, userId);
                     console.log(record);
-                    console.log(record.name);
-                    console.log(formatTool.formatNumber(record.value));
-                    chat.sendGenericTemplate({title: formatTool.formatNumber(record.value), subtitle: record.name});
+                    let nameRecord = record.name;
+                    console.log(nameRecord);
+                    let valueRecord = formatTool.formatNumber(record.value);
+                    console.log(valueRecord);
+                    let sendValue = {title: valueRecord, subtitle: nameRecord};
+                    console.log(sendValue);
+                    chat.sendGenericTemplate(sendValue);
                     //textCreateRecord += "Created a new record: " + record.name + " : " +  + "\n";
                 } else {
                     textUserSaid += line + "\n";
