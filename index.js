@@ -61,32 +61,13 @@ function onUserNeedHelpTransactions(payload, chat) {
 
 function onUserNeedHelp(payload, chat) {
     let titleHelpInput = "Input";
-    let subTitleHelpInput = 'Eat something 1000\n' +
-        'Buy something 2,000.05\n' +
-        'Give someone 5k\n' +
-        'Buy something 1m';
+    let subTitleHelpInput = 'Examples:\nbuy st 2,000.05, buy st 5k, buy st 1m';
     let titleHelpReport = 'Report';
-    let subTitleHelpReport = 'report\n' +
-        'report today\n' +
-        'report week\n' +
-        'report month\n' +
-        'report 7d\n' +
-        'report yesterday\n' +
-        'report 17/02\n' +
-        'report 17/02/2017\n' +
-        'report 17/02-18/02\n' +
-        'report 17/02/2017-18/02/2017\n';
+    let subTitleHelpReport = 'report [time]\n' +
+        'Accepted times:\ntoday, yesterday, week, month, 3d, 17/02, 17/02/2017, 17/02-18/02, 17/02/2017-18/02/2017';
     let titleHelpHistory = 'History';
-    let subTitleHelpHistory = 'history\n' +
-        'history today\n' +
-        'history week\n' +
-        'history month\n' +
-        'history 7d\n' +
-        'history yesterday\n' +
-        'history 17/02\n' +
-        'history 17/02/2017\n' +
-        'history 17/02-18/02\n' +
-        'history 17/02/2017-18/02/2017\n';
+    let subTitleHelpHistory = 'history [time]\n' +
+        'Accepted times:\ntoday, yesterday, week, month, 3d, 17/02, 17/02/2017, 17/02-18/02, 17/02/2017-18/02/2017';
     chat.sendGenericTemplate([{title: titleHelpInput, subtitle: subTitleHelpInput},
         {title: titleHelpReport, subtitle: subTitleHelpReport},
         {title: titleHelpHistory, subtitle: subTitleHelpHistory}
