@@ -214,7 +214,7 @@ function sendArrayItemToChat(itemArray, chat) {
             if (subArray.length === 1) {
                 chat.sendGenericTemplate(subArray);
             } else {
-                chat.sendListTemplate(subArray, [], { top_element_style: "compact" });
+                chat.sendListTemplate(subArray);
             }
         }
     }
