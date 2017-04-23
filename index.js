@@ -214,9 +214,17 @@ function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
     let dateTimeTo = momentTo.valueOf();
 
     let successCallback = function (snapshot) {
-        snapshot.reverse().forEach(function (childSnapshot) {
+        let itemArray = [];
+        snapshot.forEach(function (childSnapshot) {
             let item = childSnapshot.val();
-            chat.sendGenericTemplate([{title: formatTool.formatNumber(item.value), subtitle: item.name + "\n" + item.timeCreated}]);
+            itemArray.push(item);
+        });
+
+        itemArray.reverse().forEach(item => {
+            chat.sendGenericTemplate([{
+                title: formatTool.formatNumber(item.value),
+                subtitle: item.name + "\n" + item.timeCreated
+            }]);
         });
     };
 
