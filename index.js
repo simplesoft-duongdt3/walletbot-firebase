@@ -221,9 +221,10 @@ function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
         });
 
         itemArray.reverse().forEach(item => {
+            let millisecondCreated = formatTool.parseDate(item.timeCreated).add(7, 'h').valueOf();
             chat.sendGenericTemplate([{
                 title: formatTool.formatNumber(item.value),
-                subtitle: item.name + "\n" + item.timeCreated
+                subtitle: item.name + "\n" + formatTool.formatDateTime(millisecondCreated)
             }]);
         });
     };

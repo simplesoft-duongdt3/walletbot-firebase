@@ -11,6 +11,10 @@ module.exports = {
     formatNumber : function (number) {
         return numeral(number).format('0,0.[00]');
     },
+
+    formatDateTime : function (millisecond) {
+        return moment(millisecond, "DD/MM/YYYY hh:ss");
+    },
     formatDateTime : function (millisecond, format) {
         return moment(millisecond, format);
     },
@@ -18,13 +22,16 @@ module.exports = {
         return moment(millisecond).format("DD/MM/YYYY");
     },
     formatTime : function (millisecond) {
-        return moment(millisecond).format("hh/mm/ss");
+        return moment(millisecond).format("hh:mm:ss");
     },
     parseDateTime : function (millisecond, format) {
         return moment(millisecond, format);
     },
-    parseDate : function (millisecond) {
-        return moment(millisecond, "DD/MM/YYYY");
+    parseDateFromMillisecond : function (time) {
+        return moment(time);
+    },
+    parseDate : function (dateStr) {
+        return moment(dateStr, "DD/MM/YYYY");
     },
     parseTime : function (millisecond) {
         return moment(millisecond, "hh/mm/ss");
