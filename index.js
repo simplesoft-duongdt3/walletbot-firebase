@@ -109,14 +109,7 @@ function onUserSendMessage(payload, chat) {
                 if (record) {
                     let recordsRef = firebaseDb.ref("transactions_" + userId);
                     createTransaction(recordsRef, record, userId);
-                    console.log(record);
-                    let nameRecord = record.name;
-                    console.log(nameRecord);
-                    let valueRecord = formatTool.formatNumber(record.value);
-                    console.log(valueRecord);
-                    let sendValue = {title: valueRecord, subtitle: nameRecord};
-                    console.log(sendValue);
-                    chat.sendGenericTemplate(sendValue);
+                    chat.sendGenericTemplate([sendValue]);
                     //textCreateRecord += "Created a new record: " + record.name + " : " +  + "\n";
                 } else {
                     textUserSaid += line + "\n";
@@ -194,7 +187,7 @@ function report(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
             "   Min: " + formatTool.formatNumber(min) + "/transaction" +
             "\n" +
             "   Max: " + formatTool.formatNumber(max) + "/transaction";
-        chat.sendGenericTemplate({title: reportTitle, subtitle: reportText});
+        chat.sendGenericTemplate([{title: reportTitle, subtitle: reportText}]);
     };
 
     recordsRef
