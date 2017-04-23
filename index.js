@@ -3,11 +3,11 @@ const adminFirebase = require("firebase-admin");
 const serviceAccount = require("./config/serviceAccountKey.json");
 const config = require('config');
 const tools = require('./tools');
+const formatTool = require('./formattool');
 const payloads = require('./botpayload');
 const configAuth = config.get('messenger_bot.auth');
 const BootBot = require('bootbot');
-const moment = require('moment');
-const numeral = require('numeral');
+
 
 // '1,000'
 adminFirebase.initializeApp({
@@ -26,9 +26,9 @@ const bot = new BootBot({
 bot.setGetStartedButton(payloads.GET_STARTED);
 bot.setGreetingText("I'm Tiny Wallet Bot. Nice to meet you!");
 /*bot.setPersistentMenu([
-    // {title: "Settings", type: "postback", payload: payloads.SETTING},
-    {title: "Help", type: "postback", payload: payloads.HELP}
-], false);*/
+ // {title: "Settings", type: "postback", payload: payloads.SETTING},
+ {title: "Help", type: "postback", payload: payloads.HELP}
+ ], false);*/
 
 bot.on('message', onUserSendMessage);
 bot.on('postback', onUserSendPostback);
@@ -36,15 +36,70 @@ bot.start();
 
 
 //---------------FUNCTIONS for bot----------------\\
+
+function onUserNeedHelpInputFormat(payload, chat) {
+    chat.say('\n' +
+
+        '\n' + 'Good luck! Have a good time!'
+    );
+}
+
+function onUserNeedHelpReport(payload, chat) {
+    chat.say(
+        ': \n' +
+         +
+        '\n' + 'Good luck! Have a good time!'
+    );
+}
+
+function onUserNeedHelpTransactions(payload, chat) {
+    chat.say(
+         +
+        '\n\n' + 'Good luck! Have a good time!'
+    );
+}
+
 function onUserNeedHelp(payload, chat) {
-    chat.say({
+    let titleHelpInput = "Input";
+    let subTitleHelpInput = 'Eat something 1000\n' +
+        'Buy something 2,000.05\n' +
+        'Give someone 5k\n' +
+        'Buy something 1m';
+    let titleHelpReport = 'Report';
+    let subTitleHelpReport = 'report\n' +
+        'report today\n' +
+        'report week\n' +
+        'report month\n' +
+        'report 7d\n' +
+        'report yesterday\n' +
+        'report 17/02\n' +
+        'report 17/02/2017\n' +
+        'report 17/02-18/02\n' +
+        'report 17/02/2017-18/02/2017\n';
+    let titleHelpHistory = 'History';
+    let subTitleHelpHistory = 'history\n' +
+        'history today\n' +
+        'history week\n' +
+        'history month\n' +
+        'history 7d\n' +
+        'history yesterday\n' +
+        'history 17/02\n' +
+        'history 17/02/2017\n' +
+        'history 17/02-18/02\n' +
+        'history 17/02/2017-18/02/2017\n';
+    chat.sendGenericTemplate([{title: titleHelpInput, subtitle: subTitleHelpInput},
+        {title: titleHelpReport, subtitle: subTitleHelpReport},
+        {title: titleHelpHistory, subtitle: subTitleHelpHistory}
+    ]);
+
+    /*chat.say({
         text: 'FAQ',
         buttons: [
             {type: 'postback', title: 'Input format', payload: payloads.HELP_INPUT_FORMAT},
             {type: 'postback', title: 'Report', payload: payloads.HELP_REPORT},
             // { type: 'postback', title: 'Transaction', payload: payloads.HELP_TRANSACTION }
         ]
-    });
+    });*/
 }
 
 function onUserHello(payload, chat) {
@@ -89,23 +144,18 @@ function onUserSendMessage(payload, chat) {
     } else {
         let arrayOfLines = text.match(/[^\r\n]+/g);
         let textUserSaid = "";
-        let arrayElements = [];
         if (arrayOfLines) {
             arrayOfLines.forEach(line => {
                 let record = tools.getRecordFromText(line);
                 if (record) {
                     let recordsRef = firebaseDb.ref("transactions_" + userId);
                     createTransaction(recordsRef, record, userId);
-                    arrayElements.push({title : numeral(record.value).format('0,0.[00]'), subtitle: record.name});
+                    chat.sendGenericTemplate({title: formatTool.formatNumber(record.value), subtitle: record.name});
                     //textCreateRecord += "Created a new record: " + record.name + " : " +  + "\n";
                 } else {
-                    textUserSaid +=  line + "\n";
+                    textUserSaid += line + "\n";
                 }
             });
-
-            if (arrayElements.length > 0) {
-                chat.sendGenericTemplate(arrayElements);
-            }
 
             if (textUserSaid.length > 0) {
                 chat.say("You said: \n" + textUserSaid);
@@ -127,45 +177,6 @@ function onUserNeedPostbackSetting(payload, chat) {
 
 }
 
-function onUserNeedHelpInputFormat(payload, chat) {
-    chat.say('Input format:\n' +
-        'Eat something 1000 -> value: 1,000\n' +
-        'Buy something 2,000.05 -> value: 2,000.05\n' +
-        'Give someone 5k -> value: 5,000\n' +
-        'Buy something 1m -> value: 1,000,000\n' +
-        '\n' + 'Good luck! Have a good time!'
-    );
-}
-
-function onUserNeedHelpReport(payload, chat) {
-    chat.say(
-        'Report: \n' +
-        'report -> report today\n' +
-        'report today -> today report\n' +
-        'report week -> report week\n' +
-        'report month -> report month\n' +
-        'report 7d -> report 7 day\n' +
-        'report yesterday -> yesterday report' +
-        'report 17/2 -> report 17/02/[current year]\n' +
-        'report 17/2/2017 -> report 17/02/2017\n' +
-        '\n' + 'Good luck! Have a good time!'
-    );
-}
-
-function onUserNeedHelpTransactions(payload, chat) {
-    chat.say(
-        'Transactions list: \n' +
-        'transaction -> transactions today\n' +
-        'transactions yesterday -> transactions yesterday\n' +
-        'transactions week -> transactions week\n' +
-        'transactions month -> transactions month\n' +
-        'transactions 7d -> transactions 7 day\n' +
-        'transactions 17/2 -> transactions 17/02/[current year]\n' +
-        'transactions 17/2/2017 -> transactions 17/02/2017' +
-        '\n\n' + 'Good luck! Have a good time!'
-    );
-}
-
 function onUserSendPostback(payload, chat) {
     console.log(payload);
     const text = payload.postback.payload;
@@ -176,12 +187,6 @@ function onUserSendPostback(payload, chat) {
         onUserNeedPostbackHelp(payload, chat);
     } else if (payloads.SETTING === text) {
         onUserNeedPostbackSetting(payload, chat);
-    } else if (payloads.HELP_INPUT_FORMAT === text) {
-        onUserNeedHelpInputFormat(payload, chat);
-    } else if (payloads.HELP_REPORT === text) {
-        onUserNeedHelpReport(payload, chat);
-    } else if (payloads.HELP_TRANSACTION === text) {
-        onUserNeedHelpTransactions(payload, chat);
     }
 }
 
@@ -190,9 +195,9 @@ function report(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
     const userId = payload.sender.id;
     let recordsRef = firebaseDb.ref("transactions_" + userId);
 
-    let momentFrom = moment(fromTimeDDMMYY, "DD/MM/YYYY").subtract(7, 'h');
+    let momentFrom = formatTool.parseDate(fromTimeDDMMYY).subtract(7, 'h');
     let dateTimeFrom = momentFrom.valueOf();
-    let momentTo = moment(toTimeDDMMYY, "DD/MM/YYYY").add(1, 'd').subtract(1, 's').subtract(7, 'h');
+    let momentTo = formatTool.parseDate(toTimeDDMMYY).add(1, 'd').subtract(1, 's').subtract(7, 'h');
     let dateTimeTo = momentTo.valueOf();
     let diffDay = momentTo.diff(momentFrom, 'd') + 1;
 
@@ -215,18 +220,16 @@ function report(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
         });
         let avg = sum / diffDay;
 
-        console.log();
-        let reportText = "Report from " + fromTimeDDMMYY + " to " + toTimeDDMMYY +
+        let reportTitle = "Report from " + fromTimeDDMMYY + " to " + toTimeDDMMYY;
+        let reportText =
+            "   Sum: " + formatTool.formatNumber(sum) +
             "\n" +
-            "   Sum: " + numeral(sum).format('0,0.[00]') +
+            "   Avg: " + formatTool.formatNumber(avg) + "/day" +
             "\n" +
-            "   Avg: " + numeral(avg).format('0,0.[00]') + "/day" +
+            "   Min: " + formatTool.formatNumber(min) + "/transaction" +
             "\n" +
-            "   Min: " + numeral(min).format('0,0.[00]') + "/transaction" +
-            "\n" +
-            "   Max: " + numeral(max).format('0,0.[00]') + "/transaction";
-
-        chat.say(reportText);
+            "   Max: " + formatTool.formatNumber(max) + "/transaction";
+        chat.sendGenericTemplate({title: reportTitle, subtitle: reportText});
     };
 
     recordsRef
@@ -236,37 +239,6 @@ function report(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
         .once('value', successCallback);
 }
 
-function transactions(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
-    const text = payload.message.text;
-    const userId = payload.sender.id;
-    let recordsRef = firebaseDb.ref("transactions_" + userId);
+function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
 
-    dateTimeFrom.format("DD/MM/YYYY")
-    dateTimeTo.format("DD/MM/YYYY")
-    let dateTimeFrom = moment(fromTimeDDMMYY, "DD/MM/YYYY");
-    let dateTimeTo = moment(toTimeDDMMYY, "DD/MM/YYYY");
-
-    let successCallback = function (snapshot) {
-        let sum = 0.0;
-
-        snapshot.forEach(function (childSnapshot) {
-            let item = childSnapshot.val();
-            sum += item.value;
-        });
-        console.log();
-        let reportText = "Report from " + fromTimeDDMMYY + " to " + +
-                "\n" +
-            "   Sum: " + numeral(sum).format('0,0.[0000]');
-
-        chat.say(reportText);
-    };
-
-    let fromTimeQuery = moment(fromTime).subtract(7, 'h').valueOf();
-    let toTimeQuery = moment(toTime).subtract(7, 'h').valueOf();
-
-    recordsRef
-        .orderByChild('timeCreated')
-        .startAt(fromTimeQuery)
-        .endAt(toTimeQuery)
-        .once('value', successCallback);
 }
