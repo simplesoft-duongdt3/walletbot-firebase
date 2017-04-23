@@ -13,10 +13,10 @@ module.exports = {
     },
 
     formatDateTime : function (millisecond) {
-        return moment(millisecond, "DD/MM/YYYY hh:ss");
+        return moment(millisecond).format("DD/MM/YYYY hh:ss");
     },
     formatDateTime : function (millisecond, format) {
-        return moment(millisecond, format);
+        return moment(millisecond).format(format);
     },
     formatDate : function (milisecond) {
         return moment(millisecond).format("DD/MM/YYYY");
