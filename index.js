@@ -265,7 +265,7 @@ function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
                 buttons: [{
                     type: "postback",
                     title: "Delete",
-                    payload: payloads.DELETE_TRANSACTION + item.uid
+                    payload: payloads.DELETE_TRANSACTION + transaction.id
                 }]
             });
         });
@@ -276,7 +276,7 @@ function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
         if (err) {
             console.log(err);
         } else {
-            let query = connection.query('SELECT name, value, timeTransaction ' +
+            let query = connection.query('SELECT id, name, value, timeTransaction ' +
                 '   FROM Transaction  ' +
                 'WHERE userId = ? ' +
                 '   AND timeTransaction >= ?' +
