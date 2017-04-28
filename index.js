@@ -84,10 +84,9 @@ function createTransaction(record, userId) {
     };
 
     dbPool.getConnection(function(err, connection) {
-        if (!err) {
+        if (err) {
             console.log(err);
         } else {
-            console.log(err);
             connection.query('INSERT INTO Transaction SET ?', transaction, function (error, results, fields) {
                 // And done with the connection.
                 connection.release();
@@ -186,10 +185,10 @@ function report(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
     let diffDay = momentTo.diff(momentFrom, 'd') + 1;
 
     dbPool.getConnection(function(err, connection) {
-        if (!err) {
+        if (err) {
             console.log(err);
         } else {
-            connection.query('SELECT COUNT(1) as numTransaction, ' +
+            let query = connection.query('SELECT COUNT(1) as numTransaction, ' +
                 '   SUM(value) as totalTransaction, ' +
                 '   MIN(value) as minTransaction, ' +
                 '   MAX(value) as maxTransaction ' +
@@ -225,6 +224,8 @@ function report(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
                     console.log("Data record saved successfully.");
                 }
             });
+
+            console.log(query);
         }
     });
 }
@@ -252,6 +253,7 @@ function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
     let dateTimeTo = momentTo.valueOf();
 
     let successCallback = function (snapshot) {
+        console.log(snapshot);
         let itemArray = [];
         snapshot.forEach(function (transaction) {
             let millisecondCreated = formatTool.parseDateFromMillisecond(transaction.timeTransaction).add(7, 'h').valueOf();
@@ -269,16 +271,14 @@ function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
     };
 
     dbPool.getConnection(function(err, connection) {
-
-        if (!err) {
+        if (err) {
             console.log(err);
         } else {
-            connection.query('SELECT name, value, timeTransaction ' +
+            let query = connection.query('SELECT name, value, timeTransaction ' +
                 '   FROM Transaction  ' +
                 'WHERE userId = ? ' +
                 '   AND timeTransaction >= ?' +
                 '   AND timeTransaction <= ?;', [userId, dateTimeFrom, dateTimeTo], function (error, results, fields) {
-
                 successCallback(results);
                 // And done with the connection.
                 connection.release();
@@ -290,6 +290,8 @@ function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
                     console.log("Data record saved successfully.");
                 }
             });
+
+            console.log(query);
         }
 
     });
