@@ -84,17 +84,22 @@ function createTransaction(record, userId) {
     };
 
     dbPool.getConnection(function(err, connection) {
-        connection.query('INSERT INTO Transaction SET ?', transaction, function (error, results, fields) {
-            // And done with the connection.
-            connection.release();
+        if (!err) {
+            console.log(err);
+        } else {
+            console.log(err);
+            connection.query('INSERT INTO Transaction SET ?', transaction, function (error, results, fields) {
+                // And done with the connection.
+                connection.release();
 
-            if (error) {
-                console.log("Data record could not be saved." + error);
-                //throw error;
-            } else {
-                console.log("Data record saved successfully.");
-            }
-        });
+                if (error) {
+                    console.log("Data record could not be saved." + error);
+                    //throw error;
+                } else {
+                    console.log("Data record saved successfully.");
+                }
+            });
+        }
     });
 }
 
@@ -181,42 +186,46 @@ function report(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
     let diffDay = momentTo.diff(momentFrom, 'd') + 1;
 
     dbPool.getConnection(function(err, connection) {
-        connection.query('SELECT COUNT(1) as numTransaction, ' +
-            '   SUM(value) as totalTransaction, ' +
-            '   MIN(value) as minTransaction, ' +
-            '   MAX(value) as maxTransaction ' +
-            '   FROM Transaction  ' +
-            'WHERE userId = ? ' +
-            '   AND timeTransaction >= ?' +
-            '   AND timeTransaction <= ?;', [userId, dateTimeFrom, dateTimeTo], function (error, results, fields) {
+        if (!err) {
+            console.log(err);
+        } else {
+            connection.query('SELECT COUNT(1) as numTransaction, ' +
+                '   SUM(value) as totalTransaction, ' +
+                '   MIN(value) as minTransaction, ' +
+                '   MAX(value) as maxTransaction ' +
+                '   FROM Transaction  ' +
+                'WHERE userId = ? ' +
+                '   AND timeTransaction >= ?' +
+                '   AND timeTransaction <= ?;', [userId, dateTimeFrom, dateTimeTo], function (error, results, fields) {
 
-            let reportTitle = "Report from " + fromTimeDDMMYY + " to " + toTimeDDMMYY;
-            let item = results[0];
-            let sum = item ? item.totalTransaction : 0;
-            let numTransaction = item ? item.numTransaction : 0;
-            let min = item ? item.minTransaction : 0;
-            let max = item ? item.maxTransaction : 0;
+                let reportTitle = "Report from " + fromTimeDDMMYY + " to " + toTimeDDMMYY;
+                let item = results[0];
+                let sum = item ? item.totalTransaction : 0;
+                let numTransaction = item ? item.numTransaction : 0;
+                let min = item ? item.minTransaction : 0;
+                let max = item ? item.maxTransaction : 0;
 
-            let reportText =
-                "   Sum: " + formatTool.formatNumber(sum) +
-                "\n" +
-                "   No: " + formatTool.formatNumber(numTransaction) + " transactions" +
-                "\n" +
-                "   Min: " + formatTool.formatNumber(min) + "/transaction" +
-                "\n" +
-                "   Max: " + formatTool.formatNumber(max) + "/transaction";
-            chat.sendGenericTemplate([{title: reportTitle, subtitle: reportText}]);
+                let reportText =
+                    "   Sum: " + formatTool.formatNumber(sum) +
+                    "\n" +
+                    "   No: " + formatTool.formatNumber(numTransaction) + " transactions" +
+                    "\n" +
+                    "   Min: " + formatTool.formatNumber(min) + "/transaction" +
+                    "\n" +
+                    "   Max: " + formatTool.formatNumber(max) + "/transaction";
+                chat.sendGenericTemplate([{title: reportTitle, subtitle: reportText}]);
 
-            // And done with the connection.
-            connection.release();
+                // And done with the connection.
+                connection.release();
 
-            if (error) {
-                console.log("Data record could not be saved." + error);
-                //throw error;
-            } else {
-                console.log("Data record saved successfully.");
-            }
-        });
+                if (error) {
+                    console.log("Data record could not be saved." + error);
+                    //throw error;
+                } else {
+                    console.log("Data record saved successfully.");
+                }
+            });
+        }
     });
 }
 
@@ -260,22 +269,28 @@ function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
     };
 
     dbPool.getConnection(function(err, connection) {
-        connection.query('SELECT name, value, timeTransaction ' +
-            '   FROM Transaction  ' +
-            'WHERE userId = ? ' +
-            '   AND timeTransaction >= ?' +
-            '   AND timeTransaction <= ?;', [userId, dateTimeFrom, dateTimeTo], function (error, results, fields) {
 
-            successCallback(results);
-            // And done with the connection.
-            connection.release();
+        if (!err) {
+            console.log(err);
+        } else {
+            connection.query('SELECT name, value, timeTransaction ' +
+                '   FROM Transaction  ' +
+                'WHERE userId = ? ' +
+                '   AND timeTransaction >= ?' +
+                '   AND timeTransaction <= ?;', [userId, dateTimeFrom, dateTimeTo], function (error, results, fields) {
 
-            if (error) {
-                console.log("Data record could not be saved." + error);
-                //throw error;
-            } else {
-                console.log("Data record saved successfully.");
-            }
-        });
+                successCallback(results);
+                // And done with the connection.
+                connection.release();
+
+                if (error) {
+                    console.log("Data record could not be saved." + error);
+                    //throw error;
+                } else {
+                    console.log("Data record saved successfully.");
+                }
+            });
+        }
+
     });
 }
