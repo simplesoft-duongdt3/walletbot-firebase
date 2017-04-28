@@ -87,7 +87,7 @@ function createTransaction(record, userId) {
         if (err) {
             console.log(err);
         } else {
-            connection.query('INSERT INTO Transaction SET ?', transaction, function (error, results, fields) {
+            let query = connection.query('INSERT INTO Transaction SET ?', transaction, function (error, results, fields) {
                 // And done with the connection.
                 connection.release();
 
@@ -98,6 +98,8 @@ function createTransaction(record, userId) {
                     console.log("Data record saved successfully.");
                 }
             });
+
+            console.log(query);
         }
     });
 }
