@@ -1,21 +1,21 @@
 'use strict';
 const adminFirebase = require("firebase-admin");
-const serviceAccount = require("./config/serviceAccountKey.json");
 const config = require('config');
 const tools = require('./tools');
 const formatTool = require('./formattool');
 const payloads = require('./botpayload');
 const configAuth = config.get('messenger_bot.auth');
+const configDb = config.get('messenger_bot.db');
 const BootBot = require('bootbot');
+let mysql = require('mysql');
 
-
-// '1,000'
-adminFirebase.initializeApp({
-    credential: adminFirebase.credential.cert(serviceAccount),
-    databaseURL: "https://tiny-wallet-bot.firebaseio.com"
+let dbPool = mysql.createPool({
+    connectionLimit: 10,
+    host: configDb.host,
+    user: configDb.user,
+    password: configDb.pass,
+    database: configDb.database
 });
-
-const firebaseDb = adminFirebase.database();
 
 const bot = new BootBot({
     accessToken: configAuth.accessToken,
@@ -73,20 +73,28 @@ function onUserHello(payload, chat) {
     });
 }
 
-function createTransaction(recordsRef, record) {
-    let newRecord = recordsRef.push();
+function createTransaction(record, userId) {
     let timeNow = formatTool.nowMillisecond();
-    newRecord.set({
+    let transaction = {
+        userId: userId,
         name: record.name,
         value: record.value,
-        time: timeNow,
+        timeTransaction: timeNow,
         timeCreated: timeNow
-    }, error => {
-        if (error) {
-            console.log("Data record could not be saved." + error);
-        } else {
-            console.log("Data record saved successfully.");
-        }
+    };
+
+    dbPool.getConnection(function(err, connection) {
+        connection.query('INSERT INTO Transaction SET ?', transaction, function (error, results, fields) {
+            // And done with the connection.
+            connection.release();
+
+            if (error) {
+                console.log("Data record could not be saved." + error);
+                //throw error;
+            } else {
+                console.log("Data record saved successfully.");
+            }
+        });
     });
 }
 
@@ -112,8 +120,7 @@ function onUserSendMessage(payload, chat) {
             arrayOfLines.forEach(line => {
                 let record = tools.getRecordFromText(line);
                 if (record) {
-                    let recordsRef = firebaseDb.ref("transactions_" + userId);
-                    createTransaction(recordsRef, record, userId);
+                    createTransaction(record, userId);
                     let nameRecord = record.name;
                     let valueRecord = formatTool.formatNumber(record.value);
                     let sendValue = {title: valueRecord, subtitle: nameRecord};
@@ -166,7 +173,6 @@ function onUserSendPostback(payload, chat) {
 function report(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
     const text = payload.message.text;
     const userId = payload.sender.id;
-    let recordsRef = firebaseDb.ref("transactions_" + userId);
 
     let momentFrom = formatTool.parseDate(fromTimeDDMMYY).subtract(7, 'h');
     let dateTimeFrom = momentFrom.valueOf();
@@ -174,42 +180,44 @@ function report(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
     let dateTimeTo = momentTo.valueOf();
     let diffDay = momentTo.diff(momentFrom, 'd') + 1;
 
-    let successCallback = function (snapshot) {
-        let sum = 0.0;
-        let min = 0.0;
-        let max = 0.0;
+    dbPool.getConnection(function(err, connection) {
+        connection.query('SELECT COUNT(1) as numTransaction, ' +
+            '   SUM(value) as totalTransaction, ' +
+            '   MIN(value) as minTransaction, ' +
+            '   MAX(value) as maxTransaction ' +
+            '   FROM Transaction  ' +
+            'WHERE userId = ? ' +
+            '   AND timeTransaction >= ?' +
+            '   AND timeTransaction <= ?;', [userId, dateTimeFrom, dateTimeTo], function (error, results, fields) {
 
-        snapshot.forEach(function (childSnapshot) {
-            let item = childSnapshot.val();
-            let value = item.value;
-            sum += value;
-            if (max < value) {
-                max = value;
-            }
+            let reportTitle = "Report from " + fromTimeDDMMYY + " to " + toTimeDDMMYY;
+            let item = results[0];
+            let sum = item ? item.totalTransaction : 0;
+            let numTransaction = item ? item.numTransaction : 0;
+            let min = item ? item.minTransaction : 0;
+            let max = item ? item.maxTransaction : 0;
 
-            if (min === 0 || min > value) {
-                min = value;
+            let reportText =
+                "   Sum: " + formatTool.formatNumber(sum) +
+                "\n" +
+                "   No: " + formatTool.formatNumber(numTransaction) + " transactions" +
+                "\n" +
+                "   Min: " + formatTool.formatNumber(min) + "/transaction" +
+                "\n" +
+                "   Max: " + formatTool.formatNumber(max) + "/transaction";
+            chat.sendGenericTemplate([{title: reportTitle, subtitle: reportText}]);
+
+            // And done with the connection.
+            connection.release();
+
+            if (error) {
+                console.log("Data record could not be saved." + error);
+                //throw error;
+            } else {
+                console.log("Data record saved successfully.");
             }
         });
-        let avg = sum / diffDay;
-
-        let reportTitle = "Report from " + fromTimeDDMMYY + " to " + toTimeDDMMYY;
-        let reportText =
-            "   Sum: " + formatTool.formatNumber(sum) +
-            "\n" +
-            "   Avg: " + formatTool.formatNumber(avg) + "/day" +
-            "\n" +
-            "   Min: " + formatTool.formatNumber(min) + "/transaction" +
-            "\n" +
-            "   Max: " + formatTool.formatNumber(max) + "/transaction";
-        chat.sendGenericTemplate([{title: reportTitle, subtitle: reportText}]);
-    };
-
-    recordsRef
-        .orderByChild('timeCreated')
-        .startAt(dateTimeFrom)
-        .endAt(dateTimeTo)
-        .once('value', successCallback);
+    });
 }
 
 function sendArrayItemToChat(itemArray, chat) {
@@ -228,7 +236,6 @@ function sendArrayItemToChat(itemArray, chat) {
 function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
     const text = payload.message.text;
     const userId = payload.sender.id;
-    let recordsRef = firebaseDb.ref("transactions_" + userId);
 
     let momentFrom = formatTool.parseDate(fromTimeDDMMYY).subtract(7, 'h');
     let dateTimeFrom = momentFrom.valueOf();
@@ -237,12 +244,11 @@ function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
 
     let successCallback = function (snapshot) {
         let itemArray = [];
-        snapshot.forEach(function (childSnapshot) {
-            let item = childSnapshot.val();
-            let millisecondCreated = formatTool.parseDateFromMillisecond(item.timeCreated).add(7, 'h').valueOf();
+        snapshot.forEach(function (transaction) {
+            let millisecondCreated = formatTool.parseDateFromMillisecond(transaction.timeTransaction).add(7, 'h').valueOf();
             itemArray.push({
-                title: formatTool.formatNumber(item.value),
-                subtitle: item.name + "\n" + formatTool.formatDateTimeDefault(millisecondCreated),
+                title: formatTool.formatNumber(transaction.value),
+                subtitle: transaction.name + "\n" + formatTool.formatDateTimeDefault(millisecondCreated),
                 buttons: [{
                     type: "postback",
                     title: "Delete",
@@ -253,9 +259,23 @@ function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
         sendArrayItemToChat(itemArray, chat);
     };
 
-    recordsRef
-        .orderByChild('timeCreated')
-        .startAt(dateTimeFrom)
-        .endAt(dateTimeTo)
-        .once('value', successCallback);
+    dbPool.getConnection(function(err, connection) {
+        connection.query('SELECT name, value, timeTransaction ' +
+            '   FROM Transaction  ' +
+            'WHERE userId = ? ' +
+            '   AND timeTransaction >= ?' +
+            '   AND timeTransaction <= ?;', [userId, dateTimeFrom, dateTimeTo], function (error, results, fields) {
+
+            successCallback(results);
+            // And done with the connection.
+            connection.release();
+
+            if (error) {
+                console.log("Data record could not be saved." + error);
+                //throw error;
+            } else {
+                console.log("Data record saved successfully.");
+            }
+        });
+    });
 }
