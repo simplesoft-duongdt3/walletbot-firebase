@@ -197,7 +197,7 @@ function report(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
                 '   FROM Transaction  ' +
                 'WHERE userId = ? ' +
                 '   AND timeTransaction >= ?' +
-                '   AND timeTransaction <= ?;', [userId, dateTimeFrom, dateTimeTo], function (error, results, fields) {
+                '   AND timeTransaction <= ?', [userId, dateTimeFrom, dateTimeTo], function (error, results, fields) {
 
                 let reportTitle = "Report from " + fromTimeDDMMYY + " to " + toTimeDDMMYY;
                 let item = results[0];
@@ -280,7 +280,7 @@ function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
                 '   FROM Transaction  ' +
                 'WHERE userId = ? ' +
                 '   AND timeTransaction >= ?' +
-                '   AND timeTransaction <= ?;', [userId, dateTimeFrom, dateTimeTo], function (error, results, fields) {
+                '   AND timeTransaction <= ?', [userId, dateTimeFrom, dateTimeTo], function (error, results, fields) {
                 successCallback(results);
                 // And done with the connection.
                 connection.release();
