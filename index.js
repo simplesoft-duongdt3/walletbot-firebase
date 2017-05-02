@@ -1,13 +1,13 @@
-'use strict';
-const adminFirebase = require("firebase-admin");
 const config = require('config');
 const tools = require('./tools');
 const formatTool = require('./formattool');
+const mysqlUtil = require('./mysqlUtil');
 const payloads = require('./botpayload');
+const BootBot = require('bootbot');
+const mysql = require('mysql');
+
 const configAuth = config.get('messenger_bot.auth');
 const configDb = config.get('messenger_bot.db');
-const BootBot = require('bootbot');
-let mysql = require('mysql');
 
 let dbPool = mysql.createPool({
     connectionLimit: 10,
@@ -73,37 +73,57 @@ function onUserHello(payload, chat) {
     });
 }
 
-function createTransaction(record, userId) {
-    let timeNow = formatTool.nowMillisecond();
-    let transaction = {
-        userId: userId,
-        name: record.name,
-        value: record.value,
-        timeTransaction: timeNow,
-        timeCreated: timeNow
-    };
+function createTransaction(records, userId, callbackSuccess, callbackFail) {
+    let transactions = [];
 
-    dbPool.getConnection(function(err, connection) {
-        if (err) {
-            console.log(err);
-        } else {
-            let query = connection.query('INSERT INTO Transaction SET ?', transaction, function (error, results, fields) {
-                // And done with the connection.
-                connection.release();
+    records.forEach((record) => {
+        let timeNow = formatTool.nowMillisecond();
+        let transaction = {
+            userId: userId,
+            name: record.name,
+            value: record.value,
+            timeTransaction: timeNow,
+            timeCreated: timeNow
+        };
 
-                if (error) {
-                    console.log("Data record could not be saved." + error);
-                    //throw error;
-                } else {
-                    console.log("Data record saved successfully.");
-                }
-            });
-
-            console.log(query);
-        }
+        transactions.push(transaction);
     });
+
+    mysqlUtil.insert(dbPool, "Transaction", transactions, callbackSuccess, callbackFail);
 }
 
+function createTransactionAndSendFromText(text, userId, chat) {
+    let arrayOfLines = text.match(/[^\r\n]+/g);
+    let textUserSaid = "";
+    if (arrayOfLines) {
+
+        let arrayItem = [];
+        let records = [];
+        arrayOfLines.forEach(line => {
+            let record = tools.getRecordFromText(line);
+            if (record) {
+                records.push(record);
+                let nameRecord = record.name;
+                let valueRecord = formatTool.formatNumber(record.value);
+                let sendValue = {title: valueRecord, subtitle: nameRecord};
+                arrayItem.push(sendValue);
+                //textCreateRecord += "Created a new record: " + record.name + " : " +  + "\n";
+            } else {
+                textUserSaid += line + "\n";
+            }
+        });
+
+        if (textUserSaid.length > 0) {
+            chat.say("You said: \n" + textUserSaid);
+        }
+
+        createTransaction(records, userId, () => {
+            sendArrayItemToChat(arrayItem, chat);
+        }, () => {
+            chat.sendTextMessage("Create transactions fail! Try again later!")
+        });
+    }
+}
 function onUserSendMessage(payload, chat) {
     const text = payload.message.text;
     const userId = payload.sender.id;
@@ -118,30 +138,7 @@ function onUserSendMessage(payload, chat) {
         let fromTime = formatTool.now().add(7, 'h').format("DD/MM/YYYY");
         history(payload, chat, fromTime, fromTime);
     } else {
-        let arrayOfLines = text.match(/[^\r\n]+/g);
-        let textUserSaid = "";
-        if (arrayOfLines) {
-
-            let arrayItem = [];
-            arrayOfLines.forEach(line => {
-                let record = tools.getRecordFromText(line);
-                if (record) {
-                    createTransaction(record, userId);
-                    let nameRecord = record.name;
-                    let valueRecord = formatTool.formatNumber(record.value);
-                    let sendValue = {title: valueRecord, subtitle: nameRecord};
-                    arrayItem.push(sendValue);
-                    //textCreateRecord += "Created a new record: " + record.name + " : " +  + "\n";
-                } else {
-                    textUserSaid += line + "\n";
-                }
-            });
-
-            sendArrayItemToChat(arrayItem, chat);
-            if (textUserSaid.length > 0) {
-                chat.say("You said: \n" + textUserSaid);
-            }
-        }
+        createTransactionAndSendFromText(text, userId, chat);
     }
 }
 
@@ -184,52 +181,41 @@ function report(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
     let dateTimeFrom = momentFrom.valueOf();
     let momentTo = formatTool.parseDate(toTimeDDMMYY).add(1, 'd').subtract(1, 's').subtract(7, 'h');
     let dateTimeTo = momentTo.valueOf();
-    let diffDay = momentTo.diff(momentFrom, 'd') + 1;
+    //let diffDay = momentTo.diff(momentFrom, 'd') + 1;
 
-    dbPool.getConnection(function(err, connection) {
-        if (err) {
-            console.log(err);
-        } else {
-            let query = connection.query('SELECT COUNT(1) as numTransaction, ' +
-                '   SUM(value) as totalTransaction, ' +
-                '   MIN(value) as minTransaction, ' +
-                '   MAX(value) as maxTransaction ' +
-                '   FROM Transaction  ' +
-                'WHERE userId = ? ' +
-                '   AND timeTransaction >= ?' +
-                '   AND timeTransaction <= ?', [userId, dateTimeFrom, dateTimeTo], function (error, results, fields) {
+    let query = 'SELECT COUNT(1) as numTransaction, ' +
+        '   SUM(value) as totalTransaction, ' +
+        '   MIN(value) as minTransaction, ' +
+        '   MAX(value) as maxTransaction ' +
+        '   FROM Transaction  ' +
+        'WHERE userId = ? ' +
+        '   AND timeTransaction >= ?' +
+        '   AND timeTransaction <= ?';
 
-                let reportTitle = "Report from " + fromTimeDDMMYY + " to " + toTimeDDMMYY;
-                let item = results[0];
-                let sum = item ? item.totalTransaction : 0;
-                let numTransaction = item ? item.numTransaction : 0;
-                let min = item ? item.minTransaction : 0;
-                let max = item ? item.maxTransaction : 0;
+    let callbackSuccess = (results) => {
+        let reportTitle = "Report from " + fromTimeDDMMYY + " to " + toTimeDDMMYY;
+        let item = results[0];
+        let sum = item ? item.totalTransaction : 0;
+        let numTransaction = item ? item.numTransaction : 0;
+        let min = item ? item.minTransaction : 0;
+        let max = item ? item.maxTransaction : 0;
 
-                let reportText =
-                    "   Sum: " + formatTool.formatNumber(sum) +
-                    "\n" +
-                    "   No: " + formatTool.formatNumber(numTransaction) + " transactions" +
-                    "\n" +
-                    "   Min: " + formatTool.formatNumber(min) + "/transaction" +
-                    "\n" +
-                    "   Max: " + formatTool.formatNumber(max) + "/transaction";
-                chat.sendGenericTemplate([{title: reportTitle, subtitle: reportText}]);
+        let reportText =
+            "   Sum: " + formatTool.formatNumber(sum) +
+            "\n" +
+            "   No: " + formatTool.formatNumber(numTransaction) + " transactions" +
+            "\n" +
+            "   Min: " + formatTool.formatNumber(min) + "/transaction" +
+            "\n" +
+            "   Max: " + formatTool.formatNumber(max) + "/transaction";
+        chat.sendGenericTemplate([{title: reportTitle, subtitle: reportText}]);
+    };
 
-                // And done with the connection.
-                connection.release();
+    let callbackFail = (err) => {
+        chat.sendTextMessage("Get report fail! Try again later!")
+    };
 
-                if (error) {
-                    console.log("Data record could not be saved." + error);
-                    //throw error;
-                } else {
-                    console.log("Data record saved successfully.");
-                }
-            });
-
-            console.log(query);
-        }
-    });
+    mysqlUtil.query(dbPool, query, [userId, dateTimeFrom, dateTimeTo], callbackSuccess, callbackFail);
 }
 
 function sendArrayItemToChat(itemArray, chat) {
@@ -245,6 +231,7 @@ function sendArrayItemToChat(itemArray, chat) {
         }
     }
 }
+
 function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
     const text = payload.message.text;
     const userId = payload.sender.id;
@@ -254,8 +241,14 @@ function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
     let momentTo = formatTool.parseDate(toTimeDDMMYY).add(1, 'd').subtract(1, 's').subtract(7, 'h');
     let dateTimeTo = momentTo.valueOf();
 
-    let successCallback = function (snapshot) {
-        console.log(snapshot);
+
+    let query = 'SELECT id, name, value, timeTransaction ' +
+        '   FROM Transaction  ' +
+        'WHERE userId = ? ' +
+        '   AND timeTransaction >= ?' +
+        '   AND timeTransaction <= ?';
+
+    let callbackSuccess = (snapshot) => {
         let itemArray = [];
         snapshot.forEach(function (transaction) {
             let millisecondCreated = formatTool.parseDateFromMillisecond(transaction.timeTransaction).add(7, 'h').valueOf();
@@ -272,29 +265,9 @@ function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
         sendArrayItemToChat(itemArray, chat);
     };
 
-    dbPool.getConnection(function(err, connection) {
-        if (err) {
-            console.log(err);
-        } else {
-            let query = connection.query('SELECT id, name, value, timeTransaction ' +
-                '   FROM Transaction  ' +
-                'WHERE userId = ? ' +
-                '   AND timeTransaction >= ?' +
-                '   AND timeTransaction <= ?', [userId, dateTimeFrom, dateTimeTo], function (error, results, fields) {
-                successCallback(results);
-                // And done with the connection.
-                connection.release();
+    let callbackFail = (err) => {
+        chat.sendTextMessage("Get history fail! Try again later!")
+    };
 
-                if (error) {
-                    console.log("Data record could not be saved." + error);
-                    //throw error;
-                } else {
-                    console.log("Data record saved successfully.");
-                }
-            });
-
-            console.log(query);
-        }
-
-    });
+    mysqlUtil.query(dbPool, query, [userId, dateTimeFrom, dateTimeTo], callbackSuccess, callbackFail);
 }
