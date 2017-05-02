@@ -78,18 +78,11 @@ function createTransaction(records, userId, callbackSuccess, callbackFail) {
 
     records.forEach((record) => {
         let timeNow = formatTool.nowMillisecond();
-        let transaction = {
-            userId: userId,
-            name: record.name,
-            value: record.value,
-            timeTransaction: timeNow,
-            timeCreated: timeNow
-        };
-
+        let transaction = [ userId, record.name, record.value, timeNow, timeNow ];
         transactions.push(transaction);
     });
 
-    mysqlUtil.insert(dbPool, "Transaction", transactions, callbackSuccess, callbackFail);
+    mysqlUtil.insert(dbPool, "Transaction", "userId, name, value, timeTransaction, timeCreated", transactions, callbackSuccess, callbackFail);
 }
 
 function createTransactionAndSendFromText(text, userId, chat) {

@@ -2,14 +2,14 @@
  * Created by admin on 4/22/17.
  */
 module.exports = {
-    insert: function (dbPool, tableName, recordArr, callbackSuccess, callbackFail) {
+    insert: function (dbPool, tableName, cols, recordArr, callbackSuccess, callbackFail) {
         if (recordArr.length > 0) {
-            let query = dbPool.getConnection(function (err, connection) {
+            dbPool.getConnection(function (err, connection) {
                 if (err) {
                     console.log("insert: Connect db server fail " + err);
                     callbackFail(err);
                 } else {
-                    let query = connection.query("INSERT INTO " + "`" + tableName + "`" + " SET ?", recordArr, function (error, results, fields) {
+                    connection.query("INSERT INTO " + "`" + tableName + "` (" + cols + ") VALUES ?", recordArr, function (error, results, fields) {
                         // And done with the connection.
                         connection.release();
 
@@ -21,8 +21,6 @@ module.exports = {
                             console.log("insert: Successfully.");
                         }
                     });
-
-                    console.log(query);
                 }
             });
 
