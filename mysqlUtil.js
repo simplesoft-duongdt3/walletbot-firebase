@@ -3,21 +3,13 @@
  */
 module.exports = {
     insert: function (dbPool, tableName, recordArr, callbackSuccess, callbackFail) {
-        let sql = "";
-        recordArr.forEach((value, index) => {
-            if (index !== 0) {
-                sql += ";\n";
-            }
-            sql += "INSERT INTO " + "`" + tableName + "`" + " SET ?";
-        });
-
-        if (sql.length > 0) {
+        if (recordArr.length > 0) {
             let query = dbPool.getConnection(function (err, connection) {
                 if (err) {
                     console.log("insert: Connect db server fail " + err);
                     callbackFail(err);
                 } else {
-                    let query = connection.query(sql, recordArr, function (error, results, fields) {
+                    let query = connection.query("INSERT INTO " + "`" + tableName + "`" + " SET ?", recordArr, function (error, results, fields) {
                         // And done with the connection.
                         connection.release();
 
@@ -29,10 +21,11 @@ module.exports = {
                             console.log("insert: Successfully.");
                         }
                     });
+
+                    console.log(query);
                 }
             });
 
-            console.log(query);
         }
     },
 
