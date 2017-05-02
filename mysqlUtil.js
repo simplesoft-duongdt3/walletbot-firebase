@@ -9,7 +9,7 @@ module.exports = {
                     console.log("insert: Connect db server fail " + err);
                     callbackFail(err);
                 } else {
-                    connection.query("INSERT INTO " + "`" + tableName + "` (" + cols + ") VALUES ?", recordArr, function (error, results, fields) {
+                    connection.query("INSERT INTO " + "`" + tableName + "` (" + cols + ") VALUES ?", [recordArr], function (error, results, fields) {
                         // And done with the connection.
                         connection.release();
 
