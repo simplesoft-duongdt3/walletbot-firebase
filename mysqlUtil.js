@@ -12,7 +12,7 @@ module.exports = {
         });
 
         if (sql.length > 0) {
-            dbPool.getConnection(function (err, connection) {
+            let query = dbPool.getConnection(function (err, connection) {
                 if (err) {
                     console.log("insert: Connect db server fail " + err);
                     callbackFail(err);
@@ -31,6 +31,8 @@ module.exports = {
                     });
                 }
             });
+
+            console.log(query);
         }
     },
 
