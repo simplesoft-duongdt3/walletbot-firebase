@@ -218,7 +218,7 @@ function report(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
         '   MIN(value) as minTransaction, ' +
         '   MAX(value) as maxTransaction ' +
         '   FROM Transaction  ' +
-        'WHERE userId = ? AND delete = 0 ';
+        'WHERE userId = ? AND `delete` = 0 ';
 
     let reportTitle = "Report";
     if (fromTimeDDMMYY && toTimeDDMMYY) {
@@ -280,7 +280,7 @@ function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
     let args = [userId];
     let query = 'SELECT id, name, value, timeTransaction ' +
         '   FROM Transaction  ' +
-        'WHERE userId = ? AND delete = 0 ';
+        'WHERE userId = ? AND `delete` = 0 ';
 
     if (fromTimeDDMMYY && toTimeDDMMYY) {
         let momentFrom = formatTool.parseDate(fromTimeDDMMYY).subtract(7, 'h');
