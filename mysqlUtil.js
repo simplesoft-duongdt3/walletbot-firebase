@@ -45,6 +45,10 @@ module.exports = {
                         console.log("query: Successfully.");
                     }
                 });
+
+                console.log(query);
+
+
             }
         });
     }
