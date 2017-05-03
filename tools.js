@@ -37,16 +37,21 @@ module.exports = {
 
         let countTrue = 0;
         keywords.forEach(key => {
-            if (typeof key === 'string' && key.toLowerCase() === text.toLowerCase()) {
+            if (typeof key === 'string' && key.trim().toLowerCase() === text.trim().toLowerCase()) {
                 countTrue++;
-            } else if (key instanceof RegExp) {
-                if (!text.match(key)) {
-                    countTrue++;
-                }
             }
         });
 
         return countTrue > 0;
+    },
+    checkWithRegExp: function (text, regExp) {
+        if (!text || !regExp) {
+            return false;
+        }
+        if (!(regExp instanceof RegExp)) {
+            return false;
+        }
+        return text.match(regExp);
     },
 
     getRecordFromText: function (text) {

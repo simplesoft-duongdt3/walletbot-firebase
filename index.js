@@ -78,7 +78,7 @@ function createTransaction(records, userId, callbackSuccess, callbackFail) {
 
     records.forEach((record) => {
         let timeNow = formatTool.nowMillisecond();
-        let transaction = [ userId, record.name, record.value, timeNow, timeNow ];
+        let transaction = [userId, record.name, record.value, timeNow, timeNow];
         transactions.push(transaction);
     });
 
@@ -125,13 +125,54 @@ function onUserSendMessage(payload, chat) {
     } else if (tools.checkKeyword(text, ['hi', 'hello'])) {
         onUserHello(payload, chat);
     } else if (tools.checkKeyword(text, ["report"])) {
-        let fromTime = formatTool.now().add(7, 'h').format("DD/MM/YYYY");
-        report(payload, chat, fromTime, fromTime);
+        report(payload, chat, null, null);
     } else if (tools.checkKeyword(text, ["history"])) {
-        let fromTime = formatTool.now().add(7, 'h').format("DD/MM/YYYY");
-        history(payload, chat, fromTime, fromTime);
+        history(payload, chat, null, null);
     } else {
-        createTransactionAndSendFromText(text, userId, chat);
+        let nowWithTimeZone = formatTool.now().add(7, 'h');
+        if (tools.checkWithRegExp(text, /^\s*report\s*today\s*$/i)) {
+            let fromTime = nowWithTimeZone.format("DD/MM/YYYY");
+            report(payload, chat, fromTime, fromTime);
+        } else if (tools.checkWithRegExp(text, /^\s*report\s*yesterday\s*$/i)) {
+            let fromTime = nowWithTimeZone.add(-1, 'd').format("DD/MM/YYYY");
+            report(payload, chat, fromTime, fromTime);
+        } else if (tools.checkWithRegExp(text, /^\s*report\s*week\s*$/i)) {
+            let fromTimeDate = nowWithTimeZone.isoWeekday("Monday");
+            let toTimeDate = nowWithTimeZone.isoWeekday("Sunday");
+
+            let fromTime = fromTimeDate.format("DD/MM/YYYY");
+            let toTime = toTimeDate.format("DD/MM/YYYY");
+            report(payload, chat, fromTime, toTime);
+        } else if (tools.checkWithRegExp(text, /^\s*report\s*month\s*$/i)) {
+            let fromTimeDate = nowWithTimeZone.date(1);
+            let toTimeDate = nowWithTimeZone.date(1).add(1, 'M').add(-1, 'd');
+
+            let fromTime = fromTimeDate.format("DD/MM/YYYY");
+            let toTime = toTimeDate.format("DD/MM/YYYY");
+            report(payload, chat, fromTime, toTime);
+        } else if (tools.checkWithRegExp(text, /^\s*history\s*today\s*$/i)) {
+            let fromTime = nowWithTimeZone.format("DD/MM/YYYY");
+            history(payload, chat, fromTime, fromTime);
+        } else if (tools.checkWithRegExp(text, /^\s*history\s*yesterday\s*$/i)) {
+            let fromTime = nowWithTimeZone.add(-1, 'd').format("DD/MM/YYYY");
+            history(payload, chat, fromTime, fromTime);
+        } else if (tools.checkWithRegExp(text, /^\s*history\s*week\s*$/i)) {
+            let fromTimeDate = nowWithTimeZone.isoWeekday("Monday");
+            let toTimeDate = nowWithTimeZone.isoWeekday("Sunday");
+
+            let fromTime = fromTimeDate.format("DD/MM/YYYY");
+            let toTime = toTimeDate.format("DD/MM/YYYY");
+            history(payload, chat, fromTime, toTime);
+        } else if (tools.checkWithRegExp(text, /^\s*history\s*month\s*$/i)) {
+            let fromTimeDate = nowWithTimeZone.date(1);
+            let toTimeDate = nowWithTimeZone.date(1).add(1, 'M').add(-1, 'd');
+
+            let fromTime = fromTimeDate.format("DD/MM/YYYY");
+            let toTime = toTimeDate.format("DD/MM/YYYY");
+            history(payload, chat, fromTime, toTime);
+        } else {
+            createTransactionAndSendFromText(text, userId, chat);
+        }
     }
 }
 
@@ -169,24 +210,31 @@ function onUserSendPostback(payload, chat) {
 function report(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
     const text = payload.message.text;
     const userId = payload.sender.id;
-
-    let momentFrom = formatTool.parseDate(fromTimeDDMMYY).subtract(7, 'h');
-    let dateTimeFrom = momentFrom.valueOf();
-    let momentTo = formatTool.parseDate(toTimeDDMMYY).add(1, 'd').subtract(1, 's').subtract(7, 'h');
-    let dateTimeTo = momentTo.valueOf();
     //let diffDay = momentTo.diff(momentFrom, 'd') + 1;
 
+    let args = [userId];
     let query = 'SELECT COUNT(1) as numTransaction, ' +
         '   SUM(value) as totalTransaction, ' +
         '   MIN(value) as minTransaction, ' +
         '   MAX(value) as maxTransaction ' +
         '   FROM Transaction  ' +
-        'WHERE userId = ? ' +
-        '   AND timeTransaction >= ?' +
-        '   AND timeTransaction <= ?';
+        'WHERE userId = ? AND delete = 0 ';
+
+    let reportTitle = "Report";
+    if (fromTimeDDMMYY && toTimeDDMMYY) {
+        let momentFrom = formatTool.parseDate(fromTimeDDMMYY).subtract(7, 'h');
+        let dateTimeFrom = momentFrom.valueOf();
+        let momentTo = formatTool.parseDate(toTimeDDMMYY).add(1, 'd').subtract(1, 's').subtract(7, 'h');
+        let dateTimeTo = momentTo.valueOf();
+        query +=  ' AND timeTransaction >= ? AND timeTransaction <= ?';
+        args.push(dateTimeFrom);
+        args.push(dateTimeTo);
+
+        reportTitle = "Report from " + fromTimeDDMMYY + " to " + toTimeDDMMYY;
+    }
 
     let callbackSuccess = (results) => {
-        let reportTitle = "Report from " + fromTimeDDMMYY + " to " + toTimeDDMMYY;
+
         let item = results[0];
         let sum = item ? item.totalTransaction : 0;
         let numTransaction = item ? item.numTransaction : 0;
@@ -208,7 +256,7 @@ function report(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
         chat.sendTextMessage("Get report fail! Try again later!")
     };
 
-    mysqlUtil.query(dbPool, query, [userId, dateTimeFrom, dateTimeTo], callbackSuccess, callbackFail);
+    mysqlUtil.query(dbPool, query, args, callbackSuccess, callbackFail);
 }
 
 function sendArrayItemToChat(itemArray, chat) {
@@ -229,17 +277,20 @@ function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
     const text = payload.message.text;
     const userId = payload.sender.id;
 
-    let momentFrom = formatTool.parseDate(fromTimeDDMMYY).subtract(7, 'h');
-    let dateTimeFrom = momentFrom.valueOf();
-    let momentTo = formatTool.parseDate(toTimeDDMMYY).add(1, 'd').subtract(1, 's').subtract(7, 'h');
-    let dateTimeTo = momentTo.valueOf();
-
-
+    let args = [userId];
     let query = 'SELECT id, name, value, timeTransaction ' +
         '   FROM Transaction  ' +
-        'WHERE userId = ? ' +
-        '   AND timeTransaction >= ?' +
-        '   AND timeTransaction <= ?';
+        'WHERE userId = ? AND delete = 0 ';
+
+    if (fromTimeDDMMYY && toTimeDDMMYY) {
+        let momentFrom = formatTool.parseDate(fromTimeDDMMYY).subtract(7, 'h');
+        let dateTimeFrom = momentFrom.valueOf();
+        let momentTo = formatTool.parseDate(toTimeDDMMYY).add(1, 'd').subtract(1, 's').subtract(7, 'h');
+        let dateTimeTo = momentTo.valueOf();
+        query +=  ' AND timeTransaction >= ? AND timeTransaction <= ?';
+        args.push(dateTimeFrom);
+        args.push(dateTimeTo);
+    }
 
     let callbackSuccess = (snapshot) => {
         let itemArray = [];
@@ -248,11 +299,11 @@ function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
             itemArray.push({
                 title: formatTool.formatNumber(transaction.value),
                 subtitle: transaction.name + "\n" + formatTool.formatDateTimeDefault(millisecondCreated),
-                buttons: [{
+                /*buttons: [{
                     type: "postback",
                     title: "Delete",
                     payload: payloads.DELETE_TRANSACTION + transaction.id
-                }]
+                }]*/
             });
         });
         sendArrayItemToChat(itemArray, chat);
@@ -262,5 +313,5 @@ function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
         chat.sendTextMessage("Get history fail! Try again later!")
     };
 
-    mysqlUtil.query(dbPool, query, [userId, dateTimeFrom, dateTimeTo], callbackSuccess, callbackFail);
+    mysqlUtil.query(dbPool, query, args, callbackSuccess, callbackFail);
 }
