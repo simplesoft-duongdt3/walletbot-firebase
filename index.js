@@ -138,16 +138,16 @@ function onUserSendMessage(payload, chat) {
             report(payload, chat, fromTime, fromTime);
         } else if (tools.checkWithRegExp(text, /^\s*report\s*week\s*$/i)) {
             let fromTimeDate = nowWithTimeZone.isoWeekday("Monday");
-            let toTimeDate = nowWithTimeZone.isoWeekday("Sunday");
-
             let fromTime = fromTimeDate.format("DD/MM/YYYY");
+
+            let toTimeDate = nowWithTimeZone.isoWeekday("Sunday");
             let toTime = toTimeDate.format("DD/MM/YYYY");
             report(payload, chat, fromTime, toTime);
         } else if (tools.checkWithRegExp(text, /^\s*report\s*month\s*$/i)) {
             let fromTimeDate = nowWithTimeZone.date(1);
-            let toTimeDate = nowWithTimeZone.date(1).add(1, 'M').add(-1, 'd');
-
             let fromTime = fromTimeDate.format("DD/MM/YYYY");
+
+            let toTimeDate = nowWithTimeZone.date(1).add(1, 'M').add(-1, 'd');
             let toTime = toTimeDate.format("DD/MM/YYYY");
             report(payload, chat, fromTime, toTime);
         } else if (tools.checkWithRegExp(text, /^\s*history\s*today\s*$/i)) {
@@ -158,16 +158,16 @@ function onUserSendMessage(payload, chat) {
             history(payload, chat, fromTime, fromTime);
         } else if (tools.checkWithRegExp(text, /^\s*history\s*week\s*$/i)) {
             let fromTimeDate = nowWithTimeZone.isoWeekday("Monday");
-            let toTimeDate = nowWithTimeZone.isoWeekday("Sunday");
-
             let fromTime = fromTimeDate.format("DD/MM/YYYY");
+
+            let toTimeDate = nowWithTimeZone.isoWeekday("Sunday");
             let toTime = toTimeDate.format("DD/MM/YYYY");
             history(payload, chat, fromTime, toTime);
         } else if (tools.checkWithRegExp(text, /^\s*history\s*month\s*$/i)) {
             let fromTimeDate = nowWithTimeZone.date(1);
-            let toTimeDate = nowWithTimeZone.date(1).add(1, 'M').add(-1, 'd');
-
             let fromTime = fromTimeDate.format("DD/MM/YYYY");
+
+            let toTimeDate = nowWithTimeZone.date(1).add(1, 'M').add(-1, 'd');
             let toTime = toTimeDate.format("DD/MM/YYYY");
             history(payload, chat, fromTime, toTime);
         } else {
