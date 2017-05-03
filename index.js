@@ -292,6 +292,8 @@ function history(payload, chat, fromTimeDDMMYY, toTimeDDMMYY) {
         args.push(dateTimeTo);
     }
 
+    query +=  ' ORDER BY timeTransaction ';
+
     let callbackSuccess = (snapshot) => {
         let itemArray = [];
         snapshot.forEach(function (transaction) {
