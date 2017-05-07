@@ -5,6 +5,7 @@ const mysqlUtil = require('./mysqlUtil');
 const payloads = require('./botpayload');
 const BootBot = require('bootbot');
 const mysql = require('mysql');
+const cron = require('node-cron');
 
 const configAuth = config.get('messenger_bot.auth');
 const configDb = config.get('messenger_bot.db');
@@ -34,6 +35,26 @@ bot.on('message', onUserSendMessage);
 bot.on('postback', onUserSendPostback);
 bot.start();
 
+cron.schedule('* 30 6 * *', function() {
+
+    let lastTimeNeedRemind = formatTool.now().add(-1, 'd');
+    let args = [lastTimeNeedRemind];
+    let query = 'SELECT userId ' +
+        '   FROM UserLastUpdateTransaction ' +
+        'WHERE lastUpdateTime < ? ';
+
+    let callbackSuccess = (snapshot) => {
+        snapshot.forEach(function (userNeedRemind) {
+            bot.sendTextMessage(userNeedRemind.userId, "Cả một ngày dài bạn chưa nhập thông tin chi tiêu rồi, hay nhanh nhanh nhập thông tin chi tiêu trong ngày nhé.")
+        });
+    };
+
+    let callbackFail = (err) => {
+        console.log("Schedule send remind fail! Error: " + err)
+    };
+
+    mysqlUtil.query(dbPool, query, args, callbackSuccess, callbackFail);
+});
 
 //---------------FUNCTIONS for bot----------------\\
 
