@@ -35,7 +35,7 @@ bot.on('message', onUserSendMessage);
 bot.on('postback', onUserSendPostback);
 bot.start();
 
-cron.schedule('42 16 * * *', function() {
+cron.schedule('0 15 * * *', function() {
 
     let lastTimeNeedRemind = formatTool.now().add(-1, 'd').valueOf();
     let args = [lastTimeNeedRemind];
