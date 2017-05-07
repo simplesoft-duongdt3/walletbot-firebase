@@ -35,9 +35,9 @@ bot.on('message', onUserSendMessage);
 bot.on('postback', onUserSendPostback);
 bot.start();
 
-cron.schedule('35 16 * * *', function() {
+cron.schedule('42 16 * * *', function() {
 
-    let lastTimeNeedRemind = formatTool.now().add(-1, 'd');
+    let lastTimeNeedRemind = formatTool.now().add(-1, 'd').valueOf();
     let args = [lastTimeNeedRemind];
     let query = 'SELECT userId ' +
         '   FROM UserLastUpdateTransaction ' +
