@@ -46,7 +46,7 @@ function checkAndSendRemindToUsers() {
 
     let callbackSuccess = (snapshot) => {
         snapshot.forEach(function (userNeedRemind) {
-            bot.sendTextMessage(userNeedRemind.userId, "Cả một ngày dài bạn chưa nhập thông tin chi tiêu rồi, hay nhanh nhanh nhập thông tin chi tiêu trong ngày nhé.")
+            bot.sendTextMessage(userNeedRemind.userId, "Cả một ngày dài bạn chưa nhập thông tin chi tiêu rồi, hãy nhanh nhanh nhập thông tin chi tiêu trong ngày nhé.")
         });
     };
 
