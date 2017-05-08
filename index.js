@@ -35,9 +35,10 @@ bot.on('message', onUserSendMessage);
 bot.on('postback', onUserSendPostback);
 bot.start();
 
-cron.schedule('0 15 * * *', function() {
+cron.schedule('0 15 * * *', checkAndSendRemindToUsers);
 
-    let lastTimeNeedRemind = formatTool.now().add(-1, 'd').valueOf();
+function checkAndSendRemindToUsers() {
+    let lastTimeNeedRemind = formatTool.now().add(-22, 'h').valueOf();
     let args = [lastTimeNeedRemind];
     let query = 'SELECT userId ' +
         '   FROM UserLastUpdateTransaction ' +
@@ -54,7 +55,7 @@ cron.schedule('0 15 * * *', function() {
     };
 
     mysqlUtil.query(dbPool, query, args, callbackSuccess, callbackFail);
-});
+}
 
 //---------------FUNCTIONS for bot----------------\\
 
